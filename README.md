@@ -4,11 +4,13 @@ Public repo for collaboration, testing, issues and best practices.
 
 ## Sandbox
 
-The whole Atria boundary in one container — the real `atria-proxy` in proof
-mode plus openssl/Python stand-ins for the cloud and a backend.
-[`sandbox.md`](sandbox.md) is the walkthrough spec (A: get an identity, B:
-calls through the proxy and a live rule change, C: revoke and watch only the
-proxy react). [`sandbox/`](sandbox/) is the image source and the scripts.
+The whole Atria boundary in one container — the real `atria-proxy` in mTLS
+mode, pointed at the live TA sandbox (register + session + CA + CRL +
+revoke, and the mock business logic) over the network; nothing is stood in
+for inside the container. [`sandbox.md`](sandbox.md) is the walkthrough
+spec (A: get an identity, B: calls through the proxy and a live rule
+change, C: revoke and watch only the proxy react). [`sandbox/`](sandbox/)
+is the image source and the scripts.
 
 ```
 docker run -it --rm docker.io/trustatria/sandbox
@@ -21,7 +23,7 @@ or run it once and take the exit status:
 docker run --rm docker.io/trustatria/sandbox batch
 ```
 
-`sandbox/demo.tape` records the walkthrough as `demo.webm` with
+`sandbox/demo.tape` records the walkthrough as `demo.mp4` with
 [VHS](https://github.com/charmbracelet/vhs).
 
-[DEMO](https://youtu.be/zyTGbVb33mU)
+<video src="sandbox/demo.mp4" controls muted title="Sandbox walkthrough demo"></video>
