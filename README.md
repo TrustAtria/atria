@@ -23,7 +23,9 @@ or run it once and take the exit status:
 docker run --rm docker.io/trustatria/sandbox batch
 ```
 
-`sandbox/demo.tape` records the walkthrough as `demo.mp4` with
+`sandbox/demo.tape` records the walkthrough with
 [VHS](https://github.com/charmbracelet/vhs).
 
-<video src="sandbox/demo.mp4" controls muted title="Sandbox walkthrough demo"></video>
+![Sandbox walkthrough demo](sandbox/demo.gif)
+
+Better quality, downloadable: [`sandbox/demo.mp4`](sandbox/demo.mp4).
