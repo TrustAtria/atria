@@ -1,0 +1,64 @@
+# atria-proxy configuration for the sandbox.md walkthrough — mTLS + proof.
+# Same file shape a Debian host keeps at /etc/atria/atria-proxy.env: KEY=value,
+# read as an EnvironmentFile, every key meaning the same in both places.
+
+# The caller presents its Atria certificate two ways at once (sandbox.md L4,
+# L12): at the TLS handshake (mTLS) and inside a signed TA-Authorization
+# JWS on every request. The proxy terminates TLS here and REQUIRES a client
+# certificate chaining to ATRIA_CA_CERT; because ATRIA_PUBLIC_URL is also set
+# (below) it ALSO requires and verifies the TA-Authorization proof on every
+# request — signature against the CA public key, no secret — and the two
+# must name the same certificate. Revocation re-checked per request.
+ATRIA_AUTH_MODE=mtls
+
+# This proxy's own server certificate + key. Baked into the image; for the
+# sandbox both are Atria-CA-issued (sandbox.md L14, "*usually* from
+# dash.trustatria.com"), and the cert's SAN must cover the address the
+# scripts call — 127.0.0.1 / localhost — or curl's TLS verify fails.
+ATRIA_LISTEN_ADDR=0.0.0.0:8443
+ATRIA_TLS_CERT=/etc/atria/proxy-cert.pem
+ATRIA_TLS_KEY=/etc/atria/proxy-key.pem
+
+# The origin a TA-Authorization proof is bound to (its `htu` claim) — the
+# scripts default ABC_PUBLIC_URL to this and sign against it.
+ATRIA_PUBLIC_URL=https://127.0.0.1:8443
+
+# Default routing (trust-atria-srv#18 is per-path routing): the proxy
+# forwards to the sandbox, whose mock business logic serves /mock-login,
+# /mock-bl, /mock-logout. Nothing in this container is the upstream.
+ATRIA_UPSTREAM_URL=https://sandbox.trustatria.com
+ATRIA_UPSTREAM_TIMEOUT=30s
+
+# The pin: the TA CA public cert. Baked into the image. Every client
+# certificate the proxy accepts — and the proxy's own server cert above —
+# chains to this.
+ATRIA_CA_CERT=/etc/atria/atria-ca.pem
+
+# One Atria CA signs every deployment; a certificate names where it may be
+# used and the proxy names which place it is. The shipped key is
+# sandbox-scoped, so a real (non-sandbox) install with ATRIA_DEPLOYMENT set
+# to something else would reject it.
+ATRIA_DEPLOYMENT=sandbox
+
+ATRIA_POLICY_FILE=/etc/atria/policies.yaml
+
+# Currency rates for a policy's value_guard (b.sh's B5 step). A code:rate
+# map; a currency not listed is compared without conversion.
+ATRIA_RATES_FILE=/etc/atria/rates.yaml
+
+# The CRL for the CA that issued the agent certs — register.trustatria.com
+# (register-bo / the real atria-ca), NOT the sandbox. 15s rather than the
+# 60s default so part C does not wait a minute for the revoked cert.
+# TODO confirm the public path — register-bo's route is GET /internal/crl.
+ATRIA_CRL_URL=https://register.trustatria.com/api/internal/crl
+CRL_PULL_INTERVAL=15s
+
+ATRIA_REPORT_URL=https://register.trustatria.com/api/internal/report
+ATRIA_AUDIT_LOG=/var/log/atria/audit.log
+
+# Loopback only — the shipped default, and it holds here because the
+# walkthrough runs in this same container. It has no authentication of its
+# own, so a real install never opens it wider.
+ATRIA_ADMIN_ADDR=127.0.0.1:8081
+
+RUST_LOG=info

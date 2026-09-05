@@ -1,0 +1,45 @@
+# The boundary's whole configuration, for the sandbox.md walkthrough. Keyed
+# by agent id, which is the subject of the agent's certificate. An agent
+# with no entry is denied everything — there is no implicit allow and no
+# `deny` verb; "DELETE is blocked" is said by not listing it.
+#
+# Apply an edit with no restart:  curl -X POST http://127.0.0.1:8081/admin/policy/reload
+# A document that fails to parse is refused and the loaded policy stays.
+
+agents:
+
+  # a.sh registers as this id (override with ABC_AGENT_ID).
+  abc-agent:
+    allowed_endpoints:
+      - method: POST
+        path: /mock-login
+      - method: POST
+        path: /mock-logout
+      # /mock-bl: GET and the two writes are granted; DELETE is not, and
+      # that is the whole of "DELETE is blocked" — nothing denies it, it is
+      # just absent.
+      - method: GET
+        path: /mock-bl
+      - method: POST
+        path: /mock-bl
+      - method: PUT
+        path: /mock-bl
+
+    # The exact payment ceiling. Any `transaction_value` in a request body,
+    # at any depth, must be a number and must not exceed this — a string or
+    # a missing number is refused, not waved through. b.sh's B4 step raises
+    # this and reloads to show a refused call go through; it is the filter
+    # the client is meant to play with.
+    max_transaction_value: 1000.0
+
+    # b.sh's B5 step replaces the marker below with a `value_guard` block —
+    # the heuristic version: any field whose name contains value/amount/sum/
+    # total, numeric strings coerced, the currency read from the payload and
+    # converted via ATRIA_RATES_FILE, and a field it cannot read as a number
+    # skipped rather than refused. Example of what it inserts:
+    #   value_guard:
+    #     max: 1000.0
+    #     currency: USD
+    # VALUE_GUARD_HERE
+
+    rate_limit_per_minute: 120

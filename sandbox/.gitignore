@@ -1,0 +1,17 @@
+# Real credentials for publish.sh — never committed. Template is .env.sample.
+.env
+
+# Build-staged into the image, not tracked: the shipped sandbox API key
+# (register-key.sh / publish.sh) and the sandbox CA cert (publish.sh fetches
+# /ca). The key is sandbox-scoped and shared, but it is registered per
+# deployment, not versioned.
+api-key
+atria-ca.pem
+proxy-cert.pem
+proxy-key.pem
+
+# Walkthrough scratch (ABC_STATE default when run from a checkout), a stray
+# audit log a bad proxy start can leave here, and Python bytecode.
+state/
+*.log
+__pycache__/

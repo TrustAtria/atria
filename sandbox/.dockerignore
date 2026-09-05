@@ -1,0 +1,7 @@
+# Build context for `docker build -t trustatria/sandbox sandbox/`. COPY .
+# /opt/abc/ would otherwise ship these dev/meta files inside the image.
+Dockerfile
+README.md
+demo.tape
+demo.webm
+.dockerignore

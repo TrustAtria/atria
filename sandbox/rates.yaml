@@ -1,0 +1,9 @@
+# Currency rates for the value_guard demo (ATRIA_RATES_FILE). Each entry is
+# a currency's worth in one shared unit; the ratio converts between them.
+# Round sample numbers — value_guard is a guard rail, an estimate is enough.
+# A currency not listed here is compared unconverted, never refused.
+USD: 1.00
+EUR: 1.09
+GBP: 1.27
+JPY: 0.0067
+CNY: 0.14
