@@ -1,4 +1,10 @@
-# A recording of the sandbox walkthrough, as a webm video (Output below).
+# A recording of the sandbox walkthrough (Output below: both an mp4 and a
+# gif from the one run — the gif is what actually embeds inline in
+# README.md; GitHub does not render a <video> tag against a plain
+# repo-committed file, only its own upload-CDN URLs, so a <video src=
+# "sandbox/demo.mp4"> silently shows nothing. The mp4 is still worth
+# keeping — better quality, downloadable, linked from the README next to
+# the gif).
 #
 # VHS (https://github.com/charmbracelet/vhs) drives a real terminal and
 # records what actually happens, so this is the output, not a mock-up of
@@ -17,7 +23,7 @@
 #     ghcr.io/charmbracelet/vhs demo.tape
 #
 # Either way it pulls docker.io/trustatria/sandbox (or `docker tag` a local
-# build to that name first) and writes demo.webm.
+# build to that name first) and writes demo.mp4 + demo.gif.
 #
 # The run uses ABC_BRIEF=1 - step headers and results only, about a fifth
 # of the full transcript, paced with a beat of its own since there is no
@@ -25,8 +31,9 @@
 # lib.sh, plus a longer one between b.sh's five steps) - see the Sleep
 # right after it starts, sized from a measured real run, not guessed.
 
-#Output demo.webm
 Output demo.mp4
+Output demo.webm
+Output demo.gif
 
 Set Shell bash
 Set FontSize 15

@@ -2,6 +2,13 @@
 
 Public repo for collaboration, testing, issues and best practices.
 
+## Using Trust Atria
+
+[`agent.md`](agent.md) is the integration guide — get an API key, exchange
+it for a short-lived certificate, present it (mTLS or a `TA-Authorization`
+proof), route to a backend with `TA-Proxy-Pass`, renew and revoke. The
+runnable version of the same flow is the sandbox below.
+
 ## Sandbox
 
 The whole Atria boundary in one container — the real `atria-proxy` in mTLS
@@ -28,4 +35,4 @@ docker run --rm docker.io/trustatria/sandbox batch
 
 ![Sandbox walkthrough demo](sandbox/demo.gif)
 
-Better quality, downloadable: [`sandbox/demo.mp4`](sandbox/demo.mp4).
+Better [`quality`](https://www.youtube.com/watch?v=zyTGbVb33mU).

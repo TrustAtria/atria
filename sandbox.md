@@ -2,9 +2,12 @@
 
 The whole Atria boundary, walked on your own machine: get an agent
 identity, run business calls through the proxy and change its rules, then
-revoke the identity and watch only the proxy react. Everything runs on
-loopback in one container — the real `atria-proxy` package plus openssl and
-Python stand-ins for Atria Cloud and a customer backend.
+revoke the identity and watch only the proxy react. One container runs the
+real `atria-proxy` package, pointed at the live TA sandbox
+(`https://sandbox.trustatria.com`) for registration, session certificates,
+the CA, the CRL, revocation and the mock business logic — nothing is stood
+in for inside the container. [`agent.md`](agent.md) is the general
+integration guide this walks through.
 
 **NOTE:** *usually* below marks the production workflow; where it is
 written, the sandbox takes a shortcut for the sake of a self-contained
