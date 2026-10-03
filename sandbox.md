@@ -49,8 +49,8 @@ stays under the shared rate limit.
    against the Atria CA's public key — no shared secret.
 5. A second image runs the `atria-proxy` pointed at a mock business-logic
    backend, and also carries:
-   - the proxy's own server certificate — *usually* the customer's own,
-     for their hostname;
+   - the proxy's own certificate — issued by the Atria CA, the same as a
+     production proxy's;
    - the proxy's rules, in YAML;
    - scripts that mimic an agent calling the backend — the customer API
      being protected.
