@@ -9,6 +9,31 @@ decides — **certificate → revocation → policy**, first failure wins —
 whether to forward the call. Nothing about your backend changes; the
 enforcement is entirely in the proxy.
 
+## Basics
+
+One Atria CA issues **both** kinds of certificate:
+
+- **TA proxy** — for the customer, who runs the protected backend.
+- **AI agent bot** — for the customer's clients: you.
+
+The CA's public certificate (`atria-ca.pem`, valid to 2036) is supplied with
+the TA proxy — in the `.deb` — and published at
+<https://apt.trustatria.com/atria-ca.pem>.
+
+- The **AI agent** signs the `TA-Authorization` header with its certificate;
+  mTLS with the same certificate is optional.
+- The **TA proxy** checks every agent with the CA public certificate: the
+  agent's certificate must chain to it, and that certificate's own key
+  verifies the header signature.
+- The **TA proxy's own certificate** is its identity: what agents see in
+  mTLS, what it signs its calls to Atria with, and where its dates and
+  destination hosts are written.
+- The agent needs the CA public certificate only for mTLS, to check the
+  proxy.
+
+You register free, by email, and pay nothing; the customer pays for the
+proxy and for your use of it.
+
 - A runnable end-to-end example: [`sandbox.md`](sandbox.md) and
   [`sandbox/`](sandbox/) — see *Try it: the sandbox* at the end.
 - Product and architecture detail: <https://trustatria.com>.
@@ -19,12 +44,15 @@ enforcement is entirely in the proxy.
 
 | | |
 |---|---|
-| **An API key** | `atria_<id>_<secret>` — long-lived, opaque, issued to an account at <https://register.trustatria.com/>. An operator creates it and hands it to you; only its hash is stored. **It never goes to the proxy** — it is used once per session, against the registration API, to get a certificate. |
+| **An API key** | `atria_<id>_<secret>` — long-lived, opaque. **Self-registered and free:** sign up by email at <https://register.trustatria.com/> and create it; only its hash is stored. **It never goes to the proxy** — it is used once per session, against the registration API, to get a certificate. |
 | **The registration API base URL** | `https://register.trustatria.com/api` for Trust Atria's own service; a customer running their own CA has their own. |
 | **The proxy URL** | the host your agent actually calls — the customer's domain, or `https://sandbox.trustatria.com` for the sandbox. |
+| **The Atria CA certificate** *(mTLS only)* | the proxy's own certificate is issued by the same Atria CA as yours, so that is the CA you verify the proxy against: download <https://apt.trustatria.com/atria-ca.pem> once (valid to 2036; during a CA rotation it holds every version still valid). Not needed in proof mode. |
 
-That is all. In proof mode the CA is pinned on the proxy side, so you
-distribute no secret and no CA material.
+That is all. Certificates cost you nothing — their use is billed to the
+customer whose proxy you call, not to you. In proof mode you need no CA
+material either: the CA is pinned on the proxy side, and TLS ends at an
+ordinary public certificate in front of it.
 
 ## 2. Get a session certificate
 
@@ -75,10 +103,12 @@ uses is the operator's choice, not yours** — ask, or try mTLS first.
 ### mTLS (the proxy terminates TLS)
 
 Present the certificate at the TLS handshake, exactly as any client-cert
-TLS. Nothing Atria-specific in the request itself.
+TLS, and verify the proxy against the Atria CA — its certificate is
+Atria-issued, like yours. Nothing Atria-specific in the request itself.
 
 ```
-curl --cert client.pem --key client.key \
+curl -fsSLO https://apt.trustatria.com/atria-ca.pem      # once
+curl --cacert atria-ca.pem --cert client.pem --key client.key \
      https://proxy.example.com/api/v1/orders -d '{"amount": 250}'
 ```
 
@@ -221,12 +251,45 @@ headers["TA-Authorization"] = sign_request(method, url, body)
 Python, for use inside `curl -H "TA-Authorization: $(…)"`. Trust Atria's own
 `atria-ca sign-proof` CLI wraps the same function.
 
-## 7. Behind nginx, a CDN or an ALB (proof mode)
+## 7. Behind nginx, a CDN or an ALB
 
-If the terminator in front is only there to share port 443 or route by
-hostname, forward TCP (`ssl_preread`) and mTLS reaches the proxy untouched
-— proof mode is not needed. Where something *must* terminate (a WAF, a CDN,
-an nginx serving other paths), it has three rules, all defaults:
+How the operator puts nginx (or anything else) in front of the proxy decides
+which of §3's two ways you use — ask them, or try mTLS first.
+
+### Passthrough: mTLS reaches the proxy
+
+If nginx is only there to share port 443 or route by hostname, it forwards
+the TCP connection without opening it (`ssl_preread`), and the TLS handshake
+is between you and the proxy — exactly §3's mTLS: present your certificate,
+verify the proxy against the Atria CA (§1). Connect by **hostname**, not IP:
+nginx routes on the SNI you send. The operator's side, in short:
+
+```nginx
+# /etc/nginx/nginx.conf, top level — never in conf.d/ (that is inside http).
+# Needs the stream module: libnginx-mod-stream (apt) / nginx-mod-stream (dnf).
+stream {
+    map $ssl_preread_server_name $atria_backend {
+        agents.example.com  127.0.0.1:8443;   # the proxy
+        default             127.0.0.1:8444;   # other HTTPS sites on the host
+    }
+    server {
+        listen 443;
+        ssl_preread on;          # reads SNI, never terminates TLS
+        proxy_pass $atria_backend;
+    }
+}
+```
+
+The full steps — moving existing sites off 443, `ATRIA_LISTEN_ADDR`, SELinux
+on RHEL — are at [trustatria.com/install](https://trustatria.com/install)
+under *Behind nginx*, and in the README the `atria-proxy` package ships.
+
+### Terminating: proof mode
+
+Where something *must* terminate TLS (a WAF, a CDN, an nginx serving other
+paths), the handshake never reaches the proxy, and you sign a
+`TA-Authorization` proof per request instead (§3, §6). The front has three
+rules, all defaults:
 
 1. **Do not rewrite the path** — `proxy_pass http://…:8443;` with no
    trailing slash, no `rewrite`. A stripped prefix changes `htu`.
@@ -237,9 +300,33 @@ an nginx serving other paths), it has three rules, all defaults:
    unchanged by default. A dedicated header, so a front that rewrites
    `Authorization` for its own auth leaves the proof alone.
 
-A working `server` block is at
-[trustatria.com/install](https://trustatria.com/install) under
-*Behind nginx*, and ships beside the `atria-proxy` package.
+A working `server` block is in the same places.
+
+## 8. The proxy itself: .deb and .rpm
+
+You never install the proxy — the customer does, in front of their own
+backend. For reference, and for running one to test against:
+
+```sh
+# Debian 12+, Ubuntu 22.04+ — signed apt repository
+curl -fsSL https://apt.trustatria.com/trustatria.gpg.key \
+  | sudo gpg --dearmor -o /usr/share/keyrings/trustatria.gpg
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/trustatria.gpg] \
+https://apt.trustatria.com atria main" \
+  | sudo tee /etc/apt/sources.list.d/atria.list
+sudo apt update && sudo apt install atria-proxy
+
+# RHEL, AlmaLinux, Rocky Linux 9+ — the .rpm, downloaded
+curl -fsSLO https://apt.trustatria.com/rpm/atria-proxy-latest.x86_64.rpm
+sudo dnf install ./atria-proxy-latest.x86_64.rpm
+```
+
+Both are one binary built against glibc 2.34: the same files, the same
+service, the Atria CA public certificate included
+(`/usr/share/atria/atria-ca.pem`). The proxy's own certificate comes from
+dash.trustatria.com. The whole install is five steps at
+[trustatria.com/install](https://trustatria.com/install); to try the flow
+without installing anything, use the sandbox below.
 
 ## Try it: the sandbox
 
