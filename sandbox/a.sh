@@ -11,12 +11,15 @@ step "A1  pin the CA the proxy trusts"
 say "Everything Atria signs chains to one certificate. It ships in the"
 say "image (the proxy pins the same file), so verifying any certificate it"
 say "issues needs no call to the cloud on the hot path."
+# The kit's own copy if it bakes one, else the one the atria-proxy package
+# ships — the file the proxy pins too (entrypoint.sh).
 CA_PEM=${ABC_CA_PEM:-$(dirname "$(readlink -f "$0")")/atria-ca.pem}
+[ -n "${ABC_CA_PEM:-}" ] || [ -s "$CA_PEM" ] || CA_PEM=/usr/share/atria/atria-ca.pem
 if [ -s "$CA_PEM" ]; then
   cp "$CA_PEM" "$ABC_STATE/atria-ca.pem"
   ok "CA pinned from $CA_PEM"
 else
-  bad "no CA cert at $CA_PEM — publish.sh fetches it, or set ABC_CA_PEM"; exit 1
+  bad "no CA cert at $CA_PEM — install atria-proxy (it ships the CA), download https://apt.trustatria.com/atria-ca.pem, or set ABC_CA_PEM"; exit 1
 fi
 beat
 pause

@@ -20,13 +20,23 @@ mkdir -p /etc/atria /var/log/atria
 cp "$KIT/policies.yaml" /etc/atria/policies.yaml
 cp "$KIT/rates.yaml"    /etc/atria/rates.yaml
 
-# Baked at build time (publish.sh), all required for mTLS + proof:
-#   atria-ca.pem   — the TA CA public cert (validates client certs; public)
-#   proxy-cert.pem — this proxy's server cert, Atria-CA-issued, SAN covers
-#                    127.0.0.1 / localhost (sandbox.md L14)
+# The Atria CA public cert (validates agent certs; public) ships with the
+# atria-proxy package at /usr/share/atria/atria-ca.pem — the same file
+# https://apt.trustatria.com/atria-ca.pem serves — so it is current with the
+# installed package. An atria-ca.pem baked into the kit overrides it.
+CA=$KIT/atria-ca.pem
+[ -s "$CA" ] || CA=/usr/share/atria/atria-ca.pem
+[ -s "$CA" ] || { echo "entrypoint  no Atria CA cert — neither $KIT/atria-ca.pem nor the package's /usr/share/atria/atria-ca.pem" >&2; exit 1; }
+cp "$CA" /etc/atria/atria-ca.pem
+
+# Baked at build time (publish.sh), both required for mTLS + proof — the TA
+# proxy cert, issued by the same Atria CA as the agents' (sandbox.md L14;
+# usually generated on https://dash.trustatria.com with hostnames localhost
+# and 127.0.0.1, destination sandbox.trustatria.com):
+#   proxy-cert.pem — this proxy's certificate
 #   proxy-key.pem  — its key
-for f in atria-ca.pem proxy-cert.pem proxy-key.pem; do
-  [ -s "$KIT/$f" ] || { echo "entrypoint  no $KIT/$f in the image — the build must bake it (publish.sh)" >&2; exit 1; }
+for f in proxy-cert.pem proxy-key.pem; do
+  [ -s "$KIT/$f" ] || { echo "entrypoint  no $KIT/$f in the image — the build must bake the TA proxy cert (README: Build)" >&2; exit 1; }
   cp "$KIT/$f" "/etc/atria/$f"
 done
 chmod 0640 /etc/atria/proxy-key.pem

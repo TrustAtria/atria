@@ -5,9 +5,14 @@
 # (/mock-*) are all the sandbox, over the network.
 #
 #   sandbox/register-key.sh          # register the shipped sandbox API key
-#   curl -fsS https://sandbox.trustatria.com/ca -o sandbox/atria-ca.pem
+#   # sandbox/proxy-cert.pem + sandbox/proxy-key.pem: your TA proxy cert from
+#   # https://dash.trustatria.com (hostnames localhost, 127.0.0.1;
+#   # destination sandbox.trustatria.com) — see README.md
 #   docker build -t trustatria/sandbox sandbox/
 #   docker run -it --rm trustatria/sandbox
+#
+# The Atria CA public cert is not staged: the atria-proxy package ships it at
+# /usr/share/atria/atria-ca.pem (= https://apt.trustatria.com/atria-ca.pem).
 #
 # atria-proxy is pulled from the public apt repository. It must be a build
 # where mtls mode also verifies the TA-Authorization proof when

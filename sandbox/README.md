@@ -90,10 +90,26 @@ proof is rejected on its URL binding.
 
 ## Build it yourself
 
+The published image carries a sandbox API key and a TA proxy certificate.
+A build of your own needs both, staged in `sandbox/` first:
+
 ```
+sandbox/register-key.sh                 # writes sandbox/api-key
+# sandbox/proxy-cert.pem + sandbox/proxy-key.pem — your TA proxy cert (below)
 docker build -t trustatria/sandbox sandbox/
 docker run -it --rm trustatria/sandbox
 ```
+
+- **The TA proxy cert** is issued by the same Atria CA as the agents'
+  certificates. Generate it on <https://dash.trustatria.com> with hostnames
+  `localhost` and `127.0.0.1` (what the scripts call) and destination
+  `sandbox.trustatria.com` (where the proxy forwards). Save the certificate
+  as `proxy-cert.pem` and the key, shown once, as `proxy-key.pem`. It lives
+  two weeks; generate the next one there and rebuild.
+- **The Atria CA public cert** needs no step: the `atria-proxy` package
+  ships it at `/usr/share/atria/atria-ca.pem`, the same file
+  <https://apt.trustatria.com/atria-ca.pem> serves. A `sandbox/atria-ca.pem`
+  overrides it.
 
 `atria-proxy` is pulled from `apt.trustatria.com`; it must be a build where
 mtls mode also verifies the `TA-Authorization` proof when `ATRIA_PUBLIC_URL`
