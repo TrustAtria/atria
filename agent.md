@@ -1,6 +1,6 @@
 # Using Trust Atria — an agent integration guide
 
-How an AI agent authenticates to a Trust Atria proxy and calls a backend
+How an AI agent authenticates to a Trust Atria Agent Gateway and calls a backend
 through it. Written to be read by the agent's author, human or AI.
 
 Trust Atria is a policy proxy in front of a backend API. Your agent gets a
@@ -13,19 +13,19 @@ enforcement is entirely in the proxy.
 
 One Atria CA issues **both** kinds of certificate:
 
-- **TA proxy** — for the customer, who runs the protected backend.
+- **Atria Agent Gateway** — for the customer, who runs the protected backend.
 - **AI agent bot** — for the customer's clients: you.
 
 The CA's public certificate (`atria-ca.pem`, valid to 2036) is supplied with
-the TA proxy — in the `.deb` — and published at
+the Atria Agent Gateway — in the `.deb` — and published at
 <https://apt.trustatria.com/atria-ca.pem>.
 
 - The **AI agent** signs the `TA-Authorization` header with its certificate;
   mTLS with the same certificate is optional.
-- The **TA proxy** checks every agent with the CA public certificate: the
+- The **Atria Agent Gateway** checks every agent with the CA public certificate: the
   agent's certificate must chain to it, and that certificate's own key
   verifies the header signature.
-- The **TA proxy's own certificate** is its identity: what agents see in
+- The **Atria Agent Gateway's own certificate** is its identity: what agents see in
   mTLS, what it signs its calls to Atria with, and where its dates and
   destination hosts are written.
 - The agent needs the CA public certificate only for mTLS, to check the

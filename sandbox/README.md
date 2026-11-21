@@ -38,6 +38,8 @@ network to `sandbox.trustatria.com`):
 ./abc.sh -i       # the same, pausing before each call so you can read it
 ./a.sh ./b.sh ./c.sh   # one part at a time
 ./b1.sh … ./b5.sh      # one B step at a time — repeat any of them by hand
+./demo.sh              # the six-step gateway demo: policy from git, certificate,
+                       # allowed, denied, the signed log (-i: Enter before each step)
 ```
 
 Or run it once and take its exit status:
@@ -90,17 +92,17 @@ proof is rejected on its URL binding.
 
 ## Build it yourself
 
-The published image carries a sandbox API key and a TA proxy certificate.
+The published image carries a sandbox API key and an Atria Agent Gateway certificate.
 A build of your own needs both, staged in `sandbox/` first:
 
 ```
 sandbox/register-key.sh                 # writes sandbox/api-key
-# sandbox/proxy-cert.pem + sandbox/proxy-key.pem — your TA proxy cert (below)
+# sandbox/proxy-cert.pem + sandbox/proxy-key.pem — your Atria Agent Gateway cert (below)
 docker build -t trustatria/sandbox sandbox/
 docker run -it --rm trustatria/sandbox
 ```
 
-- **The TA proxy cert** is issued by the same Atria CA as the agents'
+- **The Atria Agent Gateway cert** is issued by the same Atria CA as the agents'
   certificates. Generate it on <https://dash.trustatria.com> with hostnames
   `localhost` and `127.0.0.1` (what the scripts call) and destination
   `sandbox.trustatria.com` (where the proxy forwards). Save the certificate

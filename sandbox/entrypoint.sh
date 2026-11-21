@@ -36,7 +36,7 @@ cp "$CA" /etc/atria/atria-ca.pem
 #   proxy-cert.pem — this proxy's certificate
 #   proxy-key.pem  — its key
 for f in proxy-cert.pem proxy-key.pem; do
-  [ -s "$KIT/$f" ] || { echo "entrypoint  no $KIT/$f in the image — the build must bake the TA proxy cert (README: Build)" >&2; exit 1; }
+  [ -s "$KIT/$f" ] || { echo "entrypoint  no $KIT/$f in the image — the build must bake the Atria Agent Gateway cert (README: Build)" >&2; exit 1; }
   cp "$KIT/$f" "/etc/atria/$f"
 done
 chmod 0640 /etc/atria/proxy-key.pem
@@ -65,7 +65,7 @@ case "$mode" in
     cat <<BANNER
 
   ───────────────────────────────────────────────────────────────────────
-  The Atria proxy is up in this container, pointed at
+  The Atria Agent Gateway is up in this container, pointed at
   $SANDBOX. register / session / CA / CRL / revoke and
   the mock business logic (/mock-*) are all that sandbox, over the network.
 

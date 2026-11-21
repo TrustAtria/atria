@@ -5,7 +5,7 @@
 # (/mock-*) are all the sandbox, over the network.
 #
 #   sandbox/register-key.sh          # register the shipped sandbox API key
-#   # sandbox/proxy-cert.pem + sandbox/proxy-key.pem: your TA proxy cert from
+#   # sandbox/proxy-cert.pem + sandbox/proxy-key.pem: your Atria Agent Gateway cert from
 #   # https://dash.trustatria.com (hostnames localhost, 127.0.0.1;
 #   # destination sandbox.trustatria.com) — see README.md
 #   docker build -t trustatria/sandbox sandbox/
@@ -28,7 +28,7 @@ ARG APT_COMPONENT=main
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      ca-certificates curl gnupg adduser jq bash \
+      ca-certificates curl gnupg adduser jq bash git openssl \
       python3 python3-cryptography \
  && curl -fsSL "${APT_URL}/trustatria.gpg.key" | gpg --dearmor -o /usr/share/keyrings/trustatria.gpg \
  && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/trustatria.gpg] ${APT_URL} ${APT_SUITE} ${APT_COMPONENT}" \
